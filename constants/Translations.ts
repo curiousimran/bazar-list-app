@@ -52,6 +52,7 @@ export const translations = {
     save: 'Save',
     delete: 'Delete',
     edit: 'Edit',
+    update: 'Update',
     done: 'Done',
     error: 'Error',
     success: 'Success',
@@ -72,6 +73,9 @@ export const translations = {
     exportSuccess: 'Export successful',
     exportError: 'Export failed',
     deletionSuccess: 'Item deleted successfully',
+    clearList: 'Clear List',
+    clearListConfirm: 'Are you sure you want to clear all items from this list?',
+    listCleared: 'List cleared successfully',
   },
   bn: {
     // Navigation
@@ -93,11 +97,11 @@ export const translations = {
     purchased: 'কেনা হয়েছে',
     pending: 'বাকি',
     noItemsYet: 'এখনো কোনো আইটেম যোগ করা হয়নি',
-    tapPlusToAdd: 'আইটেম যোগ করতে + বাটনে টাপ করুন',
+    tapPlusToAdd: 'আইটেম যোগ করতে + বাটনে ট্যাপ করুন',
     enterValidCost: 'দয়া করে সঠিক দাম লিখুন',
     confirmZeroCost: 'শূন্য দাম নিশ্চিত করুন',
     areYouSureZeroCost: 'আপনি কি নিশ্চিত যে দাম ৳০.০০?',
-    deleteConfirm: 'আপনি কি নিশ্চিত যে মুছে ফেলতে চান',
+    deleteConfirm: 'আপনি কি আসলেই মুছে ফেলতে চান',
     
     // History
     expenseHistory: 'খরচের হিসাব',
@@ -125,7 +129,8 @@ export const translations = {
     cancel: 'বাতিল',
     save: 'সংরক্ষণ',
     delete: 'মুছে ফেলুন',
-    edit: 'সম্পাদনা',
+    edit: 'সম্পাদনা করুন',
+    update: 'আপডেট',
     done: 'শেষ',
     error: 'ত্রুটি',
     success: 'সফল',
@@ -146,7 +151,17 @@ export const translations = {
     exportSuccess: 'এক্সপোর্ট সফল',
     exportError: 'এক্সপোর্ট ব্যর্থ',
     deletionSuccess: 'আইটেম সফলভাবে মুছে ফেলা হয়েছে',
+    clearList: 'লিস্ট পরিষ্কার করুন',
+    clearListConfirm: 'আপনি কি নিশ্চিত যে এই লিস্ট থেকে সব আইটেম মুছে ফেলতে চান?',
+    listCleared: 'লিস্ট সফলভাবে পরিষ্কার করা হয়েছে',
   },
 };
 
 export const getTranslation = (language: 'en' | 'bn') => translations[language];
+
+// Utility: Convert English digits to Bengali digits
+export function toBengaliDigits(input: string | number) {
+  const en = '0123456789';
+  const bn = '০১২৩৪৫৬৭৮৯';
+  return input.toString().replace(/[0-9]/g, d => bn[en.indexOf(d)]);
+}

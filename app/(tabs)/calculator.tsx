@@ -1,17 +1,23 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Modal, ScrollView, FlatList } from 'react-native';
 import { Delete } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { getColors } from '@/constants/Colors';
+import { format } from 'date-fns';
+import { MarketList } from '@/types';
+import { toBengaliDigits } from '@/constants/Translations';
+import { bn } from 'date-fns/locale';
 
 export default function CalculatorScreen() {
-  const { theme, t } = useApp();
+  const { theme, t, language } = useApp();
   const colors = getColors(theme);
   const [display, setDisplay] = useState('0');
   const [previousValue, setPreviousValue] = useState<number | null>(null);
   const [operation, setOperation] = useState<string | null>(null);
   const [waitingForOperand, setWaitingForOperand] = useState(false);
   const [history, setHistory] = useState<string>('');
+  const [showDayDetail, setShowDayDetail] = useState(false);
+  const [detailList, setDetailList] = useState<MarketList | null>(null);
 
   const inputNumber = (num: string) => {
     if (waitingForOperand) {
@@ -79,7 +85,7 @@ export default function CalculatorScreen() {
     if (previousValue !== null && operation) {
       const result = calculate(previousValue, inputValue, operation);
       setDisplay(String(result));
-      setHistory(`${previousValue} ${operation} ${inputValue} = ${result}`);
+      setHistory(`${previousValue} ${operation} ${inputValue}`);
       setPreviousValue(null);
       setOperation(null);
       setWaitingForOperand(true);
@@ -121,43 +127,64 @@ export default function CalculatorScreen() {
       flex: 1,
       backgroundColor: colors.background,
     },
+    calculatorCard: {
+      margin: 20,
+      borderRadius: 32,
+      backgroundColor: colors.surface,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.15,
+      shadowRadius: 24,
+      elevation: 12,
+      overflow: 'hidden',
+    },
     header: {
-      padding: 20,
-      paddingTop: 60,
+      padding: 24,
       backgroundColor: colors.primaryContainer,
+      borderTopLeftRadius: 32,
+      borderTopRightRadius: 32,
     },
     titleText: {
-      fontSize: 28,
-      fontWeight: '700',
+      fontSize: 40,
+      fontWeight: '800',
       color: colors.onPrimaryContainer,
       fontFamily: 'NotoSansBengali-Bold',
+      letterSpacing: 1.2,
     },
     displayContainer: {
-      flex: 1,
-      justifyContent: 'flex-end',
-      padding: 20,
-      backgroundColor: colors.surface,
-      minHeight: 180,
+      margin: 20,
+      marginBottom: 0,
+      padding: 24,
+      borderRadius: 24,
+      backgroundColor: colors.surfaceVariant,
+      borderWidth: 1.5,
+      borderColor: colors.primaryContainer,
+      shadowColor: colors.shadow,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.12,
+      shadowRadius: 12,
+      minHeight: 120,
     },
     historyText: {
-      fontSize: 16,
+      fontSize: 30,
       color: colors.onSurfaceVariant,
       fontFamily: 'NotoSansBengali-Regular',
       textAlign: 'right',
       marginBottom: 8,
-      opacity: 0.7,
+      opacity: 0.8,
       minHeight: 20,
     },
     display: {
-      fontSize: 48,
-      fontWeight: '300',
+      fontSize: 75,
+      fontWeight: '700',
       color: colors.onSurface,
-      fontFamily: 'NotoSansBengali-Regular',
+      fontFamily: 'NotoSansBengali-Bold',
       textAlign: 'right',
-      minHeight: 60,
+      minHeight: 64,
+      letterSpacing: 1.2,
     },
     operationIndicator: {
-      fontSize: 20,
+      fontSize: 22,
       color: colors.primary,
       fontFamily: 'NotoSansBengali-Regular',
       textAlign: 'right',
@@ -166,155 +193,206 @@ export default function CalculatorScreen() {
     },
     buttonContainer: {
       padding: 20,
-      backgroundColor: colors.background,
+      backgroundColor: 'transparent',
     },
     buttonRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      marginBottom: 16,
+      marginBottom: 18,
     },
     button: {
-      width: 70,
-      height: 70,
-      borderRadius: 35,
+      width: 76,
+      height: 76,
+      borderRadius: 38,
       justifyContent: 'center',
       alignItems: 'center',
       backgroundColor: colors.surfaceVariant,
       elevation: 2,
       shadowColor: colors.shadow,
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
+      shadowOpacity: 0.08,
       shadowRadius: 4,
+      marginHorizontal: 2,
     },
     buttonText: {
-      fontSize: 24,
-      fontWeight: '600',
+      fontSize: 28,
+      fontWeight: '700',
       color: colors.onSurfaceVariant,
-      fontFamily: 'NotoSansBengali-Regular',
+      fontFamily: 'NotoSansBengali-Bold',
     },
     operatorButton: {
       backgroundColor: colors.primary,
+      shadowColor: colors.primary,
+      shadowOpacity: 0.18,
+      shadowRadius: 8,
     },
     operatorButtonText: {
       color: colors.onPrimary,
+      fontWeight: '800',
     },
     clearButton: {
       backgroundColor: colors.error,
+      shadowColor: colors.error,
+      shadowOpacity: 0.18,
+      shadowRadius: 8,
     },
     clearButtonText: {
       color: colors.onError,
+      fontWeight: '800',
     },
     equalsButton: {
       backgroundColor: colors.tertiary,
+      shadowColor: colors.tertiary,
+      shadowOpacity: 0.18,
+      shadowRadius: 8,
     },
     equalsButtonText: {
       color: colors.onTertiary,
+      fontWeight: '800',
     },
     zeroButton: {
-      width: 156,
-      borderRadius: 35,
+      width: 160,
+      borderRadius: 38,
     },
     backspaceButton: {
       backgroundColor: colors.secondary,
+      shadowColor: colors.secondary,
+      shadowOpacity: 0.18,
+      shadowRadius: 8,
     },
     backspaceButtonText: {
       color: colors.onSecondary,
+      fontWeight: '800',
     },
+    listItem: {
+      padding: 16,
+      borderBottomWidth: 1,
+      borderColor: colors.outlineVariant,
+    },
+    smallText: { fontSize: 40 },
+    largeText: { fontSize: 100 },
   });
+
+  const renderListItem = ({ item }: { item: MarketList }) => (
+    <TouchableOpacity
+      style={styles.listItem}
+      onPress={() => {
+        setDetailList(item);
+        setShowDayDetail(true);
+      }}
+    >
+      {/* ...existing code... */}
+    </TouchableOpacity>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.titleText}>{t('calculator')}</Text>
-      </View>
-
-      <View style={styles.displayContainer}>
-        <Text style={styles.historyText}>{history}</Text>
-        <Text style={styles.display}>{display}</Text>
-        <Text style={styles.operationIndicator}>
-          {operation && previousValue !== null ? `${previousValue} ${operation}` : ''}
-        </Text>
-      </View>
-
-      <View style={styles.buttonContainer}>
-        <View style={styles.buttonRow}>
-          <Button
-            title={t('clear')}
-            onPress={clear}
-            style={styles.clearButton}
-            textStyle={[styles.clearButtonText, { fontSize: 16 }]}
-          />
-          <Button
-            onPress={handleBackspace}
-            style={styles.backspaceButton}
-            icon={<Delete color={colors.onSecondary} size={20} />}
-          />
-          <Button
-            title="%"
-            onPress={() => {
-              const value = parseFloat(display);
-              setDisplay(String(value / 100));
-            }}
-          />
-          <Button
-            title="÷"
-            onPress={() => performOperation('÷')}
-            style={styles.operatorButton}
-            textStyle={styles.operatorButtonText}
-          />
+      <View style={styles.calculatorCard}>
+        <View style={styles.header}>
+          <Text style={styles.titleText}>{t('calculator')}</Text>
         </View>
 
-        <View style={styles.buttonRow}>
-          <Button title="7" onPress={() => inputNumber('7')} />
-          <Button title="8" onPress={() => inputNumber('8')} />
-          <Button title="9" onPress={() => inputNumber('9')} />
-          <Button
-            title="×"
-            onPress={() => performOperation('×')}
-            style={styles.operatorButton}
-            textStyle={styles.operatorButtonText}
-          />
+        <View style={styles.displayContainer}>
+          <Text style={styles.historyText}>
+            {language === 'bn' ? toBengaliDigits(history) : history}
+          </Text>
+          <Text style={styles.display}>
+            {language === 'bn' ? toBengaliDigits(display) : display}
+          </Text>
+       
         </View>
 
-        <View style={styles.buttonRow}>
-          <Button title="4" onPress={() => inputNumber('4')} />
-          <Button title="5" onPress={() => inputNumber('5')} />
-          <Button title="6" onPress={() => inputNumber('6')} />
-          <Button
-            title="−"
-            onPress={() => performOperation('-')}
-            style={styles.operatorButton}
-            textStyle={styles.operatorButtonText}
-          />
-        </View>
+        <View style={styles.buttonContainer}>
+          <View style={styles.buttonRow}>
+            <Button
+              title={t('clear')}
+              onPress={clear}
+              style={styles.clearButton}
+              textStyle={[styles.clearButtonText, { fontSize: 18 }]}
+            />
+            <Button
+              onPress={handleBackspace}
+              style={styles.backspaceButton}
+              icon={<Delete color={colors.onSecondary} size={26} />}
+            />
+            <Button
+              title="%"
+              onPress={() => {
+                const value = parseFloat(display);
+                setDisplay(String(value / 100));
+              }}
+              textStyle={styles.buttonText}
+            />
+            <Button
+              title="÷"
+              onPress={() => performOperation('÷')}
+              style={styles.operatorButton}
+              textStyle={styles.operatorButtonText}
+            />
+          </View>
 
-        <View style={styles.buttonRow}>
-          <Button title="1" onPress={() => inputNumber('1')} />
-          <Button title="2" onPress={() => inputNumber('2')} />
-          <Button title="3" onPress={() => inputNumber('3')} />
-          <Button
-            title="+"
-            onPress={() => performOperation('+')}
-            style={styles.operatorButton}
-            textStyle={styles.operatorButtonText}
-          />
-        </View>
+          <View style={styles.buttonRow}>
+            <Button title={language === 'bn' ? toBengaliDigits('7') : '7'} onPress={() => inputNumber('7')} textStyle={styles.buttonText} />
+            <Button title={language === 'bn' ? toBengaliDigits('8') : '8'} onPress={() => inputNumber('8')} textStyle={styles.buttonText} />
+            <Button title={language === 'bn' ? toBengaliDigits('9') : '9'} onPress={() => inputNumber('9')} textStyle={styles.buttonText} />
+            <Button title="×" onPress={() => performOperation('×')} style={styles.operatorButton} textStyle={styles.operatorButtonText} />
+          </View>
 
-        <View style={styles.buttonRow}>
-          <Button
-            title="0"
-            onPress={() => inputNumber('0')}
-            style={styles.zeroButton}
-          />
-          <Button title="." onPress={inputDecimal} />
-          <Button
-            title="="
-            onPress={handleEquals}
-            style={styles.equalsButton}
-            textStyle={styles.equalsButtonText}
-          />
+          <View style={styles.buttonRow}>
+            <Button title={language === 'bn' ? toBengaliDigits('4') : '4'} onPress={() => inputNumber('4')} textStyle={styles.buttonText} />
+            <Button title={language === 'bn' ? toBengaliDigits('5') : '5'} onPress={() => inputNumber('5')} textStyle={styles.buttonText} />
+            <Button title={language === 'bn' ? toBengaliDigits('6') : '6'} onPress={() => inputNumber('6')} textStyle={styles.buttonText} />
+            <Button title="−" onPress={() => performOperation('-')} style={styles.operatorButton} textStyle={styles.operatorButtonText} />
+          </View>
+
+          <View style={styles.buttonRow}>
+            <Button title={language === 'bn' ? toBengaliDigits('1') : '1'} onPress={() => inputNumber('1')} textStyle={styles.buttonText} />
+            <Button title={language === 'bn' ? toBengaliDigits('2') : '2'} onPress={() => inputNumber('2')} textStyle={styles.buttonText} />
+            <Button title={language === 'bn' ? toBengaliDigits('3') : '3'} onPress={() => inputNumber('3')} textStyle={styles.buttonText} />
+            <Button title="+" onPress={() => performOperation('+')} style={styles.operatorButton} textStyle={styles.operatorButtonText} />
+          </View>
+
+          <View style={styles.buttonRow}>
+            <Button
+              title={language === 'bn' ? toBengaliDigits('0') : '0'}
+              onPress={() => inputNumber('0')}
+              style={styles.zeroButton}
+              textStyle={styles.buttonText}
+            />
+            <Button title="." onPress={inputDecimal} textStyle={styles.buttonText} />
+            <Button
+              title="="
+              onPress={handleEquals}
+              style={styles.equalsButton}
+              textStyle={styles.equalsButtonText}
+            />
+          </View>
         </View>
       </View>
+
+      <Modal visible={showDayDetail} animationType="slide" onRequestClose={() => setShowDayDetail(false)}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+          <Text style={{ fontSize: 20, fontWeight: 'bold', margin: 16 }}>
+            {detailList ? toBengaliDigits(format(new Date(detailList.date), 'MMM dd, yyyy')) : ''}
+          </Text>
+          <ScrollView>
+            {detailList?.items.map(item => (
+              <View key={item.id} style={{ padding: 16, borderBottomWidth: 1, borderColor: colors.outlineVariant }}>
+                <Text style={{ fontSize: 16 }}>{item.name}</Text>
+                <Text>
+                  {language === 'bn' ? toBengaliDigits(item.cost?.toFixed(2) ?? '--') : item.cost?.toFixed(2) ?? '--'} ৳
+                </Text>
+                <Text>{item.purchased ? 'Bought' : 'Not bought'}</Text>
+              </View>
+            ))}
+          </ScrollView>
+          <TouchableOpacity onPress={() => {
+            setTimeout(() => setShowDayDetail(false), 50);
+          }} style={{ margin: 16 }}>
+            <Text style={{ color: colors.primary, fontWeight: 'bold' }}>{t('close') ?? 'Close'}</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }

@@ -1,10 +1,10 @@
 {
   "expo": {
-    "name": "bolt-expo-nativewind",
+    "name": "Bazarer List",
     "slug": "bolt-expo-nativewind",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/bazarer-list-icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -30,6 +30,9 @@
         "projectId": "83297362-b515-42df-bcf3-b2a42fff490e"
       }
     },
-    "owner": "curiousimran"
+    "owner": "curiousimran",
+    "android": {
+      "package": "com.curiousimran.boltexponativewind"
+    }
   }
 }

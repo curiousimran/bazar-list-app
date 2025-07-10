@@ -1,10 +1,14 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, Alert, Share, Modal, ScrollView } from 'react-native';
 import { Calendar, TrendingUp, Download, FileText, Image } from 'lucide-react-native';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isToday } from 'date-fns';
 import { useApp } from '@/contexts/AppContext';
 import { getColors } from '@/constants/Colors';
 import { MarketList } from '@/types';
+import { captureRef } from 'react-native-view-shot';
+import * as Print from 'expo-print';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 interface DateRange {
   start: Date;
@@ -16,6 +20,8 @@ export default function HistoryScreen() {
   const colors = getColors(theme);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showDayDetail, setShowDayDetail] = useState(false);
+  const [detailList, setDetailList] = useState<MarketList | null>(null);
 
   // Calculate monthly summary
   const monthlyData = useMemo(() => {
@@ -46,20 +52,52 @@ export default function HistoryScreen() {
     return marketLists.find(list => list.date === dateString);
   }, [marketLists, selectedDate]);
 
-  const handleExportPDF = () => {
-    // TODO: Implement PDF export
-    Alert.alert(t('exportPDF'), 'PDF export will be implemented soon');
+  // Ref for summary view
+  const summaryRef = React.useRef(null);
+
+  const handleExportPDF = async () => {
+    // Simple HTML table for monthly summary
+    const html = `
+      <html><body>
+        <h2>${t('monthlyTotal')}</h2>
+        <table border="1" style="border-collapse:collapse;width:100%">
+          <tr><th>${t('totalExpense')}</th><th>Days</th><th>Items</th><th>Daily Avg</th></tr>
+          <tr>
+            <td>৳${monthlyData.totalExpense.toFixed(2)}</td>
+            <td>${monthlyData.totalDays}</td>
+            <td>${monthlyData.totalItems}</td>
+            <td>৳${monthlyData.averageDaily.toFixed(0)}</td>
+          </tr>
+        </table>
+      </body></html>
+    `;
+    try {
+      const { uri } = await Print.printToFileAsync({ html });
+      await Sharing.shareAsync(uri, { mimeType: 'application/pdf' });
+    } catch (e) {
+      const err = e as Error;
+      Alert.alert(t('exportError'), err.message);
+    }
   };
 
-  const handleExportImage = () => {
-    // TODO: Implement image export
-    Alert.alert(t('exportImage'), 'Image export will be implemented soon');
+  const handleExportImage = async () => {
+    try {
+      if (!summaryRef.current) return;
+      const uri = await captureRef(summaryRef, { format: 'png', quality: 1 });
+      await Sharing.shareAsync(uri, { mimeType: 'image/png' });
+    } catch (e) {
+      const err = e as Error;
+      Alert.alert(t('exportError'), err.message);
+    }
   };
 
   const renderListItem = ({ item }: { item: MarketList }) => (
     <TouchableOpacity
       style={styles.listItem}
-      onPress={() => setSelectedDate(new Date(item.date))}
+      onPress={() => {
+        setDetailList(item);
+        setShowDayDetail(true);
+      }}
     >
       <View style={styles.listItemHeader}>
         <Text style={styles.listItemDate}>
@@ -292,10 +330,11 @@ export default function HistoryScreen() {
         style={styles.content}
         data={[]}
         keyExtractor={(item, index) => `header-${index}`}
+        renderItem={() => null}
         ListHeaderComponent={
           <View>
             {/* Monthly Summary */}
-            <View style={styles.summaryContainer}>
+            <View style={styles.summaryContainer} ref={summaryRef} collapsable={false}>
               <View style={styles.summaryHeader}>
                 <Text style={styles.summaryTitle}>{t('monthlyTotal')}</Text>
                 <TouchableOpacity style={styles.monthSelector}>
@@ -390,6 +429,41 @@ export default function HistoryScreen() {
           contentContainerStyle={{ paddingBottom: 20 }}
         />
       )}
+
+      {/* Day Detail Modal */}
+      <Modal visible={showDayDetail} animationType="slide" onRequestClose={() => setShowDayDetail(false)}>
+        <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+          <Text style={{ fontSize: 20, fontWeight: 'bold', margin: 16 }}>
+            {detailList ? format(new Date(detailList.date), 'MMM dd, yyyy') : ''}
+          </Text>
+          <ScrollView>
+            {detailList?.items.map(item => (
+              <View key={item.id} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16, borderBottomWidth: 1, borderColor: colors.outlineVariant }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 16 }}>{item.name}</Text>
+                  <Text>{item.purchased ? 'Bought' : 'Not bought'}</Text>
+                </View>
+                <Text style={{ fontSize: 16, fontWeight: 'bold', marginLeft: 12 }}>৳{item.cost !== null ? item.cost.toFixed(2) : '--'}</Text>
+              </View>
+            ))}
+            {detailList?.items.length === 0 && (
+              <Text style={{ padding: 16, color: colors.onSurfaceVariant }}>{t('noItemsYet')}</Text>
+            )}
+          </ScrollView>
+          {/* Total at the bottom */}
+          {detailList && detailList.items.length > 0 && (
+            <View style={{ padding: 16, borderTopWidth: 1, borderColor: colors.outlineVariant, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{t('total') ?? 'Total'}:</Text>
+              <Text style={{ fontSize: 16, fontWeight: 'bold', color: colors.primary }}>
+                ৳{detailList.items.reduce((sum, item) => sum + (item.cost || 0), 0).toFixed(2)}
+              </Text>
+            </View>
+          )}
+          <TouchableOpacity onPress={() => setShowDayDetail(false)} style={{ margin: 16 }}>
+            <Text style={{ color: colors.primary, fontWeight: 'bold', fontSize: 16 }}>{t('close') ?? 'Close'}</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }

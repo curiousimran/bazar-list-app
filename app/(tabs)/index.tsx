@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView, TextInput } from 'react-native';
 import { Plus, ShoppingCart } from 'lucide-react-native';
 import { format } from 'date-fns';
 import { useApp } from '@/contexts/AppContext';
 import { getColors } from '@/constants/Colors';
 import { MarketItem } from '@/components/MarketItem';
-import { AddItemModal } from '@/components/AddItemModal';
 import { TimeWatch } from '@/components/TimeWatch';
 import { MarketItem as MarketItemType } from '@/types';
+import { toBengaliDigits } from '@/constants/Translations';
+import { bn } from 'date-fns/locale';
 
 export default function MarketListScreen() {
-  const { theme, t, currentList, createTodaysList, getTodaysList, addItemToList, updateItemInList, deleteItemFromList } = useApp();
+  const { theme, t, language, currentList, createTodaysList, getTodaysList, addItemToList, updateItemInList, deleteItemFromList, addMarketList } = useApp();
   const colors = getColors(theme);
   const [showAddModal, setShowAddModal] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [newItemName, setNewItemName] = useState('');
 
   useEffect(() => {
     // Update current date every minute
@@ -29,11 +31,35 @@ export default function MarketListScreen() {
 
   const handleAddItem = (itemName: string) => {
     let listToUse = activeList;
-    
+
     if (!listToUse) {
-      listToUse = createTodaysList();
+      // If no list exists, create a new one and add the item directly to its items array
+      const today = new Date().toISOString().split('T')[0];
+      const newList: MarketItemType[] = [];
+      const newItem: MarketItemType = {
+        id: Date.now().toString(),
+        name: itemName,
+        purchased: false,
+        cost: null,
+        createdAt: new Date(),
+      };
+      // Create the new list with the item already included
+      const createdList = {
+        id: Date.now().toString(),
+        date: today,
+        items: [newItem],
+        totalCost: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      // Add the new list to context
+      addMarketList(createdList);
+      // Optionally, set currentList if needed (context should handle this)
+      setNewItemName('');
+      return;
     }
 
+    // If list exists, add item as usual
     const newItem: MarketItemType = {
       id: Date.now().toString(),
       name: itemName,
@@ -41,8 +67,8 @@ export default function MarketListScreen() {
       cost: null,
       createdAt: new Date(),
     };
-
     addItemToList(listToUse.id, newItem);
+    setNewItemName('');
   };
 
   const handleUpdateItem = (itemId: string, updates: Partial<MarketItemType>) => {
@@ -60,6 +86,13 @@ export default function MarketListScreen() {
   const purchasedItems = activeList?.items.filter(item => item.purchased) || [];
   const pendingItems = activeList?.items.filter(item => !item.purchased) || [];
 
+  const handleAddItemInline = () => {
+    if (newItemName.trim()) {
+      handleAddItem(newItemName.trim());
+      setNewItemName('');
+    }
+  };
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -67,7 +100,7 @@ export default function MarketListScreen() {
     },
     header: {
       padding: 20,
-      paddingTop: 60,
+      paddingTop: 50,
       backgroundColor: colors.primaryContainer,
     },
     headerTop: {
@@ -80,13 +113,13 @@ export default function MarketListScreen() {
       flex: 1,
     },
     dateText: {
-      fontSize: 14,
+      fontSize: 17,
       color: colors.onPrimaryContainer,
       fontFamily: 'NotoSansBengali-Regular',
       opacity: 0.8,
     },
     titleText: {
-      fontSize: 28,
+      fontSize: 32,
       fontWeight: '700',
       color: colors.onPrimaryContainer,
       fontFamily: 'NotoSansBengali-Bold',
@@ -172,6 +205,48 @@ export default function MarketListScreen() {
     listContainer: {
       paddingVertical: 8,
     },
+    addItemRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginHorizontal: 20,
+      marginTop: 30,
+      marginBottom: 16,
+      zIndex: 2,
+    },
+    addItemInput: {
+      flex: 1,
+      backgroundColor: colors.surface,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      fontSize: 16,
+      color: colors.onSurface,
+      borderWidth: 1,
+      borderColor: colors.outlineVariant,
+      fontFamily: 'NotoSansBengali-Regular',
+    },
+    addItemButton: {
+      marginLeft: 8,
+      backgroundColor: colors.primary,
+      borderRadius: 10,
+      padding: 10,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    watermarkText: {
+      position: 'absolute',
+      top: '45%',
+      left: 0,
+      right: 0,
+      textAlign: 'center',
+      fontSize: 40,
+      color: colors.onSurfaceVariant,
+      opacity: 0.13,
+      fontWeight: 'bold',
+      zIndex: 0,
+      fontFamily: 'NotoSansBengali-Bold',
+      pointerEvents: 'none',
+    },
     fab: {
       position: 'absolute',
       right: 20,
@@ -187,47 +262,17 @@ export default function MarketListScreen() {
       shadowOffset: { width: 0, height: 3 },
       shadowOpacity: 0.3,
       shadowRadius: 6,
+      zIndex: 10,
     },
   });
 
-  if (!activeList || activeList.items.length === 0) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.headerTop}>
-            <View style={styles.headerLeft}>
-              <Text style={styles.dateText}>
-                {format(currentDate, 'EEEE, MMMM dd, yyyy')}
-              </Text>
-              <Text style={styles.titleText}>{t('todaysMarket')}</Text>
-            </View>
-            <TimeWatch />
-          </View>
-        </View>
-
-        <View style={styles.emptyContainer}>
-          <View style={styles.emptyIcon}>
-            <ShoppingCart color={colors.onSurfaceVariant} size={64} />
-          </View>
-          <Text style={styles.emptyTitle}>{t('noItemsYet')}</Text>
-          <Text style={styles.emptySubtitle}>{t('tapPlusToAdd')}</Text>
-        </View>
-
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={() => setShowAddModal(true)}
-        >
-          <Plus color={colors.onPrimary} size={24} />
-        </TouchableOpacity>
-
-        <AddItemModal
-          visible={showAddModal}
-          onClose={() => setShowAddModal(false)}
-          onAdd={handleAddItem}
-        />
-      </SafeAreaView>
-    );
-  }
+  // For focusing the input from FAB
+  const inputRef = React.useRef<TextInput>(null);
+  const handleFabPress = () => {
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -235,34 +280,74 @@ export default function MarketListScreen() {
         <View style={styles.headerTop}>
           <View style={styles.headerLeft}>
             <Text style={styles.dateText}>
-              {format(currentDate, 'EEEE, MMMM dd, yyyy')}
+              {language === 'bn'
+                ? toBengaliDigits(format(currentDate, 'd MMMM yyyy, EEEE', { locale: bn }))
+                : format(currentDate, 'EEEE, MMMM dd, yyyy')}
             </Text>
             <Text style={styles.titleText}>{t('todaysMarket')}</Text>
           </View>
           <TimeWatch />
         </View>
-        
         <View style={styles.summaryContainer}>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>{t('total')}</Text>
             <Text style={styles.summaryValue}>
-              ৳{activeList.totalCost.toFixed(2)}
+              {language === 'bn' 
+                ? `৳${toBengaliDigits((activeList?.totalCost ?? 0).toFixed(2))}`
+                : `৳${(activeList?.totalCost ?? 0).toFixed(2)}`
+              }
             </Text>
           </View>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>{t('purchased')}</Text>
             <Text style={styles.summaryValue}>
-              {purchasedItems.length}
+              {language === 'bn' 
+                ? toBengaliDigits(purchasedItems.length)
+                : purchasedItems.length
+              }
             </Text>
           </View>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>{t('pending')}</Text>
             <Text style={styles.summaryValue}>
-              {pendingItems.length}
+              {language === 'bn' 
+                ? toBengaliDigits(pendingItems.length)
+                : pendingItems.length
+              }
             </Text>
           </View>
         </View>
       </View>
+
+      {/* Inline Add Item Input - moved below header/summary */}
+      <View style={styles.addItemRow}>
+        <TextInput
+          ref={inputRef}
+          style={styles.addItemInput}
+          value={newItemName}
+          onChangeText={setNewItemName}
+          placeholder={t('enterItemName')}
+          placeholderTextColor={colors.onSurfaceVariant}
+          onSubmitEditing={handleAddItemInline}
+          returnKeyType="done"
+        />
+        <TouchableOpacity
+          style={styles.addItemButton}
+          onPress={handleAddItemInline}
+          activeOpacity={0.8}
+        >
+          <Plus color={colors.onPrimary} size={24} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Floating Add Button (FAB) */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={handleFabPress}
+        activeOpacity={0.8}
+      >
+        <Plus color={colors.onPrimary} size={32} />
+      </TouchableOpacity>
 
       <FlatList
         style={styles.content}
@@ -285,7 +370,7 @@ export default function MarketListScreen() {
                   renderItem={({ item }) => (
                     <MarketItem
                       item={item}
-                      listId={activeList.id}
+                      listId={activeList?.id ?? ''}
                       onUpdate={handleUpdateItem}
                       onDelete={handleDeleteItem}
                     />
@@ -296,19 +381,19 @@ export default function MarketListScreen() {
             )}
           </View>
         )}
-      />
-
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => setShowAddModal(true)}
-      >
-        <Plus color={colors.onPrimary} size={24} />
-      </TouchableOpacity>
-
-      <AddItemModal
-        visible={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        onAdd={handleAddItem}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            {/* Watermark absolutely positioned in the background */}
+            <Text style={styles.watermarkText}>No item added</Text>
+            <View style={{alignItems: 'center', zIndex: 1}}>
+              <View style={styles.emptyIcon}>
+                <ShoppingCart color={colors.onSurfaceVariant} size={64} />
+              </View>
+              <Text style={styles.emptyTitle}>{t('noItemsYet')}</Text>
+              <Text style={styles.emptySubtitle}>{t('tapPlusToAdd')}</Text>
+            </View>
+          </View>
+        }
       />
     </SafeAreaView>
   );

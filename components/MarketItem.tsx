@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Modal, TextInput } from 'react-native';
 import { Check, X, Trash2, ShoppingBag } from 'lucide-react-native';
 import { MarketItem as MarketItemType } from '@/types';
 import { useApp } from '@/contexts/AppContext';
@@ -17,6 +17,8 @@ export const MarketItem: React.FC<Props> = ({ item, listId, onUpdate, onDelete }
   const { theme, t } = useApp();
   const colors = getColors(theme);
   const [showCostModal, setShowCostModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editName, setEditName] = useState(item.name);
 
   const handleMarkPurchased = () => {
     if (item.purchased) {
@@ -34,14 +36,7 @@ export const MarketItem: React.FC<Props> = ({ item, listId, onUpdate, onDelete }
   };
 
   const handleDelete = () => {
-    Alert.alert(
-      t('delete'),
-      `${t('deleteConfirm')} "${item.name}"?`,
-      [
-        { text: t('cancel'), style: 'cancel' },
-        { text: t('delete'), style: 'destructive', onPress: () => onDelete(item.id) },
-      ]
-    );
+    onDelete(item.id);
   };
 
   const styles = StyleSheet.create({
@@ -118,7 +113,12 @@ export const MarketItem: React.FC<Props> = ({ item, listId, onUpdate, onDelete }
         </TouchableOpacity>
 
         <View style={styles.content}>
-          <Text style={styles.itemName}>{item.name}</Text>
+          <TouchableOpacity disabled={item.purchased} onPress={() => {
+            setEditName(item.name);
+            setShowEditModal(true);
+          }}>
+            <Text style={styles.itemName}>{item.name}</Text>
+          </TouchableOpacity>
           
           {item.purchased && item.cost !== null && (
             <View style={styles.costContainer}>
@@ -144,6 +144,36 @@ export const MarketItem: React.FC<Props> = ({ item, listId, onUpdate, onDelete }
         onClose={() => setShowCostModal(false)}
         onSave={handleSaveCost}
       />
+
+      <Modal visible={showEditModal} transparent animationType="fade" onRequestClose={() => setShowEditModal(false)}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }}>
+          <View style={{ width: '85%', backgroundColor: colors.surface, borderRadius: 16, padding: 24 }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 12, color: colors.onSurface }}>{t('edit')}</Text>
+            <TextInput
+              value={editName}
+              onChangeText={setEditName}
+              style={{ borderWidth: 1, borderColor: colors.outline, borderRadius: 8, padding: 12, fontSize: 16, color: colors.onSurface, marginBottom: 16 }}
+              autoFocus
+            />
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 12 }}>
+              <TouchableOpacity onPress={() => setShowEditModal(false)} style={{ paddingVertical: 10, paddingHorizontal: 18 }}>
+                <Text style={{ color: colors.onSurfaceVariant, fontWeight: 'bold' }}>{t('cancel') ?? 'Cancel'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  if (editName.trim() && editName !== item.name) {
+                    onUpdate(item.id, { name: editName.trim() });
+                  }
+                  setShowEditModal(false);
+                }}
+                style={{ backgroundColor: colors.primary, borderRadius: 8, paddingVertical: 10, paddingHorizontal: 18 }}
+              >
+                <Text style={{ color: colors.onPrimary, fontWeight: 'bold' }}>{t('update') ?? 'Update'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </>
   );
 };

@@ -20,6 +20,7 @@ interface AppContextType {
   addItemToList: (listId: string, item: MarketItem) => void;
   updateItemInList: (listId: string, itemId: string, updates: Partial<MarketItem>) => void;
   deleteItemFromList: (listId: string, itemId: string) => void;
+  clearList: (listId: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -215,6 +216,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const clearList = (listId: string) => {
+    const list = marketLists.find(l => l.id === listId);
+    if (list) {
+      const updatedList = {
+        ...list,
+        items: [],
+        totalCost: 0,
+        updatedAt: new Date(),
+      };
+      updateMarketList(updatedList);
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -234,6 +248,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addItemToList,
         updateItemInList,
         deleteItemFromList,
+        clearList,
       }}
     >
       {children}

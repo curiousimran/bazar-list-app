@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, Modal, TextInput, TouchableOpacity, Alert, Keyboard } from 'react-native';
 import { DollarSign, Check, X } from 'lucide-react-native';
 import { useApp } from '@/contexts/AppContext';
 import { getColors } from '@/constants/Colors';
@@ -16,34 +16,26 @@ export const CostInputModal: React.FC<Props> = ({ visible, itemName, onClose, on
   const colors = getColors(theme);
   const [costInput, setCostInput] = useState('');
   const [error, setError] = useState('');
+  const inputRef = React.useRef<TextInput>(null);
 
   useEffect(() => {
     if (visible) {
       setCostInput('');
       setError('');
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 100);
     }
   }, [visible]);
 
   const handleSave = () => {
     const cost = parseFloat(costInput);
-    
     if (isNaN(cost) || cost < 0) {
       setError(t('enterValidCost'));
       return;
     }
-
-    if (cost === 0) {
-      Alert.alert(
-        t('confirmZeroCost'),
-        t('areYouSureZeroCost'),
-        [
-          { text: t('cancel'), style: 'cancel' },
-          { text: t('yes'), onPress: () => onSave(cost) },
-        ]
-      );
-    } else {
-      onSave(cost);
-    }
+    onSave(cost);
+    onClose();
   };
 
   const styles = StyleSheet.create({
@@ -181,6 +173,7 @@ export const CostInputModal: React.FC<Props> = ({ visible, itemName, onClose, on
             <View style={styles.inputWrapper}>
               <Text style={styles.currencySymbol}>৳</Text>
               <TextInput
+                ref={inputRef}
                 style={styles.input}
                 value={costInput}
                 onChangeText={(text) => {
@@ -190,7 +183,6 @@ export const CostInputModal: React.FC<Props> = ({ visible, itemName, onClose, on
                 placeholder="0.00"
                 placeholderTextColor={colors.onSurfaceVariant}
                 keyboardType="numeric"
-                autoFocus
                 onSubmitEditing={handleSave}
               />
             </View>
@@ -200,7 +192,10 @@ export const CostInputModal: React.FC<Props> = ({ visible, itemName, onClose, on
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={[styles.button, styles.cancelButton]}
-              onPress={onClose}
+              onPress={() => {
+                Keyboard.dismiss();
+                setTimeout(onClose, 50);
+              }}
             >
               <X color={colors.onSurfaceVariant} size={20} />
               <Text style={[styles.buttonText, styles.cancelButtonText]}>
@@ -210,7 +205,10 @@ export const CostInputModal: React.FC<Props> = ({ visible, itemName, onClose, on
 
             <TouchableOpacity
               style={[styles.button, styles.saveButton]}
-              onPress={handleSave}
+              onPress={() => {
+                Keyboard.dismiss();
+                setTimeout(handleSave, 50);
+              }}
             >
               <Check color={colors.onPrimary} size={20} />
               <Text style={[styles.buttonText, styles.saveButtonText]}>

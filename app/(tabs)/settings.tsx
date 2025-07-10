@@ -159,6 +159,7 @@ export default function SettingsScreen() {
       paddingTop: 20,
       borderTopWidth: 1,
       borderTopColor: colors.outlineVariant,
+      paddingBottom: 24,
     },
     developerTitle: {
       fontSize: 16,
@@ -281,6 +282,9 @@ export default function SettingsScreen() {
               <Text style={styles.developerName}>Muhammad Imran</Text>
               <Text style={styles.developerRole}>
                 {language === 'en' ? 'Mobile App Developer' : 'মোবাইল অ্যাপ ডেভেলপার'}
+              </Text>
+              <Text style={{ fontSize: 14, color: colors.primary, fontFamily: 'NotoSansBengali-Regular', textAlign: 'center', marginTop: 4 }}>
+                curiousimran@gmail.com
               </Text>
             </View>
           </View>

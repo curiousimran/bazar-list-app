@@ -4,9 +4,10 @@ import { Clock } from 'lucide-react-native';
 import { format } from 'date-fns';
 import { useApp } from '@/contexts/AppContext';
 import { getColors } from '@/constants/Colors';
+import { toBengaliDigits } from '@/constants/Translations';
 
 export const TimeWatch: React.FC = () => {
-  const { theme } = useApp();
+  const { theme, language } = useApp();
   const colors = getColors(theme);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -18,9 +19,13 @@ export const TimeWatch: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const timeString = format(currentTime, 'h:mm');
+  const timeString = language === 'bn'
+    ? toBengaliDigits(format(currentTime, 'h:mm'))
+    : format(currentTime, 'h:mm');
   const ampm = format(currentTime, 'a');
-  const seconds = format(currentTime, 'ss');
+  const seconds = language === 'bn'
+    ? toBengaliDigits(format(currentTime, 'ss'))
+    : format(currentTime, 'ss');
 
   const styles = StyleSheet.create({
     container: {
@@ -29,7 +34,7 @@ export const TimeWatch: React.FC = () => {
       backgroundColor: colors.surface,
       paddingHorizontal: 16,
       paddingVertical: 12,
-      borderRadius: 24,
+      borderRadius: 20,
       elevation: 3,
       shadowColor: colors.shadow,
       shadowOffset: { width: 0, height: 2 },
@@ -46,14 +51,14 @@ export const TimeWatch: React.FC = () => {
       alignItems: 'baseline',
     },
     timeText: {
-      fontSize: 20,
+      fontSize: 35,
       fontWeight: '700',
       color: colors.primary,
       fontFamily: 'NotoSansBengali-Bold',
-      letterSpacing: 0.5,
+      letterSpacing: 0.7,
     },
     secondsText: {
-      fontSize: 14,
+      fontSize: 20,
       fontWeight: '600',
       color: colors.onSurfaceVariant,
       fontFamily: 'NotoSansBengali-Regular',
@@ -61,11 +66,11 @@ export const TimeWatch: React.FC = () => {
       opacity: 0.8,
     },
     ampmText: {
-      fontSize: 12,
+      fontSize: 15,
       fontWeight: '600',
       color: colors.onSurfaceVariant,
       fontFamily: 'NotoSansBengali-Regular',
-      marginLeft: 4,
+      marginLeft: 4.5,
       textTransform: 'uppercase',
     },
   });
