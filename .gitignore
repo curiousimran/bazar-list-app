@@ -1,5 +1,7 @@
 # dependencies
 node_modules/
+# In your .gitignore file:
+*.apk
 
 # expo
 .expo/
