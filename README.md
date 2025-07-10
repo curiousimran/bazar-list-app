@@ -52,6 +52,13 @@ A React Native mobile application for managing shopping lists with Bengali langu
 
 ### Installation
 
+#### Option 1: Download APK (Recommended for users)
+1. Go to the [assets/apk](assets/apk/) directory
+2. Download the `BazarList.apk` file
+3. Enable "Install from Unknown Sources" in your Android settings
+4. Install the APK on your device
+
+#### Option 2: Build from source (For developers)
 1. Clone the repository:
 ```bash
 git clone https://github.com/curiousimran/bazar-list-app.git
@@ -72,6 +79,16 @@ npx expo start
    - Install Expo Go app on your phone
    - Scan the QR code from the terminal
    - Or press 'a' for Android emulator or 'i' for iOS simulator
+
+#### Building APK
+To build your own APK:
+```bash
+# For internal testing (APK format)
+eas build --platform android --profile internal
+
+# For production (AAB format)
+eas build --platform android --profile production
+```
 
 ## Project Structure
 
@@ -95,6 +112,11 @@ project/
 │   └── AppContext.tsx     # Main app context
 ├── types/                 # TypeScript type definitions
 │   └── index.ts           # App types
+├── assets/                # App assets
+│   ├── images/            # App images and icons
+│   └── apk/               # Your APK files
+│       ├── BazarList.apk  # Your APK file (~100MB)
+│       └── README.md      # Installation guide
 └── android/               # Android-specific files
 ```
 
