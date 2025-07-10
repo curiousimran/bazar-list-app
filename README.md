@@ -158,6 +158,13 @@ project/
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 📦 Download বাজারের লিস্ট (APK)
+
+You can download the latest release of the app here:
+
+👉 [Download APK from GitHub Releases](https://github.com/curiousimran/bazar-list-app/releases/latest)
+
+
 ## Acknowledgments
 
 - Built with [Expo](https://expo.dev/)
