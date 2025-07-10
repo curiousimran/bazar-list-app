@@ -14,7 +14,21 @@ A React Native mobile application for managing shopping lists with Bengali langu
 
 ## Screenshots
 
-*Screenshots will be added here*
+<div align="center">
+  <img src="screenshots/screenshot1.jpg" alt="Main Market List Screen" width="200" />
+  <img src="screenshots/screenshot2.jpg" alt="Adding Items" width="200" />
+  <img src="screenshots/screenshot3.jpg" alt="Cost Input Modal" width="200" />
+  <br/>
+  <img src="screenshots/screenshot4.jpg" alt="History Screen" width="200" />
+  <img src="screenshots/screenshot5.jpg" alt="Calculator Screen" width="200" />
+  <img src="screenshots/screenshot6.jpg" alt="Settings Screen" width="200" />
+  <br/>
+  <img src="screenshots/screenshot7.jpg" alt="Dark Theme" width="200" />
+  <img src="screenshots/screenshot8.jpg" alt="Bengali Language" width="200" />
+  <img src="screenshots/screenshot9.jpg" alt="Item Management" width="200" />
+  <br/>
+  <img src="screenshots/screenshot10.jpg" alt="Expense Tracking" width="200" />
+</div>
 
 ## Tech Stack
 
@@ -130,6 +144,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Contact
 
-Your Name - [@yourtwitter](https://twitter.com/yourtwitter) - email@example.com
+Your Name - [@curiousimran1](https://x.com/curiousimran1) - curiousimran@gmail.com
 
 Project Link: [https://github.com/curiousimran/bazar-list-app](https://github.com/curiousimran/bazar-list-app) 
