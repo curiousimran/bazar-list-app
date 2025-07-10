@@ -1,4 +1,4 @@
-# Market List App (বাজারের লিস্ট)
+# Bazar List App (বাজারের লিস্ট)
 
 A React Native mobile application for managing shopping lists with Bengali language support. Built with Expo Router and featuring a modern Material Design interface.
 
@@ -40,8 +40,8 @@ A React Native mobile application for managing shopping lists with Bengali langu
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/market-list-app.git
-cd market-list-app
+git clone https://github.com/curiousimran/bazar-list-app.git
+cd bazar-list-app
 ```
 
 2. Install dependencies:
@@ -132,4 +132,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 Your Name - [@yourtwitter](https://twitter.com/yourtwitter) - email@example.com
 
-Project Link: [https://github.com/yourusername/market-list-app](https://github.com/yourusername/market-list-app) 
+Project Link: [https://github.com/curiousimran/bazar-list-app](https://github.com/curiousimran/bazar-list-app) 
