@@ -52,11 +52,13 @@ A React Native mobile application for managing shopping lists with Bengali langu
 
 ### Installation
 
-#### Option 1: Download APK (Recommended for users)
-1. Go to the [assets/apk](assets/apk/) directory
-2. Download the `BazarList.apk` file
-3. Enable "Install from Unknown Sources" in your Android settings
-4. Install the APK on your device
+#### Option 1: 
+## 📦 Download বাজারের লিস্ট (APK)
+
+You can download the latest release of the app here:
+
+👉 [Download APK from GitHub Releases](https://github.com/curiousimran/bazar-list-app/releases/latest)
+
 
 #### Option 2: Build from source (For developers)
 1. Clone the repository:
@@ -157,12 +159,6 @@ project/
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 📦 Download বাজারের লিস্ট (APK)
-
-You can download the latest release of the app here:
-
-👉 [Download APK from GitHub Releases](https://github.com/curiousimran/bazar-list-app/releases/latest)
 
 
 ## Acknowledgments
